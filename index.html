@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Lost &amp; Found AI Matcher</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Font Awesome for modern icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Google Fonts for crisp typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-compass"></i>
+        </div>
+        <div class="brand-text">
+          <h1>CampusFind <span>AI</span></h1>
+          <p class="tagline">Smart Campus Lost &amp; Found Matcher</p>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Logged-in user profile pill -->
+        <div id="userProfileBadge" class="user-profile-badge" style="display: none;">
+          <div class="user-avatar"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div class="user-meta">
+            <span id="navUserName" class="user-name">Student</span>
+            <span id="navCollegeName" class="user-college">Campus</span>
+          </div>
+          <button id="logoutBtn" class="logout-btn" title="Sign out" aria-label="Sign out">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+
+        <button id="openReportModalBtn" class="btn btn-primary">
+          <i class="fa-solid fa-plus-circle"></i>
+          <span>Report an Item</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- Hero / Stats Dashboard -->
+    <section class="stats-section">
+      <div class="stat-card">
+        <div class="stat-icon lost-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+        <div class="stat-info">
+          <h3 id="statLostCount">0</h3>
+          <p>Lost Items</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon found-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+        <div class="stat-info">
+          <h3 id="statFoundCount">0</h3>
+          <p>Found Items</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon reunited-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-info">
+          <h3 id="statReunitedCount">0</h3>
+          <p>Reunited</p>
+        </div>
+      </div>
+      <div class="stat-card ai-badge-card">
+        <div class="stat-icon ai-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <div class="stat-info">
+          <h3 id="statMatchRate">Auto</h3>
+          <p>AI Compatibility Engine</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls: Search & Filters -->
+    <section class="controls-section">
+      <!-- Search Input Container with distinct separated icon box -->
+      <div class="search-input-group">
+        <div class="search-icon-box" aria-hidden="true">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Search items by title, description, color, brand..."
+          aria-label="Search items"
+        />
+        <button id="clearSearchBtn" class="clear-search-btn" title="Clear search" style="display: none;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Filter Controls Row -->
+      <div class="filter-controls-row">
+        <!-- Status Filter Tabs -->
+        <div class="filter-tabs" id="statusFilterTabs" role="tablist">
+          <button class="tab-btn active" data-filter="all">All Items</button>
+          <button class="tab-btn tab-lost" data-filter="lost">
+            <span class="dot dot-lost"></span> Lost
+          </button>
+          <button class="tab-btn tab-found" data-filter="found">
+            <span class="dot dot-found"></span> Found
+          </button>
+          <button class="tab-btn tab-resolved" data-filter="resolved">
+            <span class="dot dot-resolved"></span> Reunited
+          </button>
+        </div>
+
+        <!-- Dropdown Filters -->
+        <div class="dropdown-filters">
+          <div class="select-wrapper">
+            <i class="fa-solid fa-shapes"></i>
+            <select id="categoryFilter" aria-label="Filter by category">
+              <option value="all">All Categories</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Cards & IDs">Cards &amp; IDs</option>
+              <option value="Bags & Backpacks">Bags &amp; Backpacks</option>
+              <option value="Books & Stationery">Books &amp; Stationery</option>
+              <option value="Keys & Accessories">Keys &amp; Accessories</option>
+              <option value="Clothing & Wearables">Clothing &amp; Wearables</option>
+              <option value="Bottles & Tumblers">Bottles &amp; Tumblers</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="select-wrapper">
+            <i class="fa-solid fa-location-dot"></i>
+            <select id="locationFilter" aria-label="Filter by location">
+              <option value="all">All Campus Locations</option>
+              <option value="Main Library">Main Library</option>
+              <option value="Student Cafeteria">Student Cafeteria</option>
+              <option value="Science & Engineering Block">Science &amp; Engineering Block</option>
+              <option value="Sports Complex & Gym">Sports Complex &amp; Gym</option>
+              <option value="Auditorium / Lecture Halls">Auditorium / Lecture Halls</option>
+              <option value="Student Union Building">Student Union Building</option>
+              <option value="Campus Bus / Parking">Campus Bus / Parking</option>
+              <option value="Hostel / Dormitories">Hostel / Dormitories</option>
+              <option value="Other Campus Area">Other Campus Area</option>
+            </select>
+          </div>
+
+          <button id="resetFiltersBtn" class="btn btn-secondary btn-icon-only" title="Reset all filters">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feed Header & Results Counter -->
+    <div class="feed-header">
+      <h2 id="feedHeading">All Reported Items</h2>
+      <span id="resultsCountBadge" class="results-badge">Showing 0 items</span>
+    </div>
+
+    <!-- Items Grid Feed -->
+    <section class="items-grid" id="itemsGrid">
+      <!-- Cards dynamically injected by app.js -->
+    </section>
+
+    <!-- Empty State Message -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+      <div class="empty-icon">
+        <i class="fa-solid fa-box-open"></i>
+      </div>
+      <h3>No matching items found</h3>
+      <p>Try adjusting your search keywords, clearing filters, or report a new lost/found item.</p>
+      <button id="emptyReportBtn" class="btn btn-primary">Report an Item</button>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <p>&copy; 2026 CampusFind AI &bull; Intelligent Campus Lost &amp; Found</p>
+      <div class="footer-actions">
+        <button id="resetSampleDataBtn" class="link-btn" title="Reload sample data">
+          <i class="fa-solid fa-rotate"></i> Reset Demo Data
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- MODAL: REPORT ITEM (LOST / FOUND)             -->
+  <!-- ============================================== -->
+  <div id="reportModal" class="modal-overlay" aria-hidden="true" role="dialog">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrapper">
+          <i class="fa-solid fa-file-circle-plus"></i>
+          <h2>Report a Campus Item</h2>
+        </div>
+        <button id="closeReportModalBtn" class="close-modal-btn" aria-label="Close modal">&times;</button>
+      </div>
+
+      <form id="reportForm" class="modal-form" novalidate>
+        <!-- Type Selector (Lost vs Found) -->
+        <div class="form-group">
+          <label class="form-label">Report Type <span class="required">*</span></label>
+          <div class="type-toggle-group">
+            <label class="type-option">
+              <input type="radio" name="itemType" value="lost" checked />
+              <div class="type-pill pill-lost">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>I Lost This Item</span>
+              </div>
+            </label>
+            <label class="type-option">
+              <input type="radio" name="itemType" value="found" />
+              <div class="type-pill pill-found">
+                <i class="fa-solid fa-hand-holding-heart"></i>
+                <span>I Found This Item</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Item Title -->
+        <div class="form-group">
+          <label for="itemTitle" class="form-label">Item Name / Title <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="itemTitle" 
+            placeholder="e.g. Blue Hydro Flask, Apple AirPods Pro, Student ID Card"
+            required 
+            maxlength="80"
+          />
+          <small class="form-hint">Be specific with brand, model, or distinctive words.</small>
+        </div>
+
+        <!-- 2-Column Row: Category & Color -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="itemCategory" class="form-label">Category <span class="required">*</span></label>
+            <select id="itemCategory" required>
+              <option value="" disabled selected>Select category...</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Cards & IDs">Cards &amp; IDs</option>
+              <option value="Bags & Backpacks">Bags &amp; Backpacks</option>
+              <option value="Books & Stationery">Books &amp; Stationery</option>
+              <option value="Keys & Accessories">Keys &amp; Accessories</option>
+              <option value="Clothing & Wearables">Clothing &amp; Wearables</option>
+              <option value="Bottles & Tumblers">Bottles &amp; Tumblers</option>
+              <option value="Other">Other</option>
+            </select>
+            <!-- Custom input revealed when 'Other' is chosen -->
+            <input 
+              type="text" 
+              id="itemCategoryOther" 
+              class="other-input" 
+              placeholder="Please specify category..." 
+              style="display: none;" 
+              maxlength="40" 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="itemColor" class="form-label">Primary Color <span class="required">*</span></label>
+            <select id="itemColor" required>
+              <option value="" disabled selected>Select color...</option>
+              <option value="Black">Black</option>
+              <option value="White">White</option>
+              <option value="Blue">Blue</option>
+              <option value="Red">Red</option>
+              <option value="Green">Green</option>
+              <option value="Gray / Silver">Gray / Silver</option>
+              <option value="Gold / Yellow">Gold / Yellow</option>
+              <option value="Brown">Brown</option>
+              <option value="Purple / Pink">Purple / Pink</option>
+              <option value="Multi-color / Pattern">Multi-color / Pattern</option>
+              <option value="Other">Other</option>
+            </select>
+            <!-- Custom input revealed when 'Other' is chosen -->
+            <input 
+              type="text" 
+              id="itemColorOther" 
+              class="other-input" 
+              placeholder="Please specify color..." 
+              style="display: none;" 
+              maxlength="30" 
+            />
+          </div>
+        </div>
+
+        <!-- 2-Column Row: Location & Date -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="itemLocation" class="form-label">Campus Location <span class="required">*</span></label>
+            <select id="itemLocation" required>
+              <option value="" disabled selected>Select location...</option>
+              <option value="Main Library">Main Library</option>
+              <option value="Student Cafeteria">Student Cafeteria</option>
+              <option value="Science & Engineering Block">Science &amp; Engineering Block</option>
+              <option value="Sports Complex & Gym">Sports Complex &amp; Gym</option>
+              <option value="Auditorium / Lecture Halls">Auditorium / Lecture Halls</option>
+              <option value="Student Union Building">Student Union Building</option>
+              <option value="Campus Bus / Parking">Campus Bus / Parking</option>
+              <option value="Hostel / Dormitories">Hostel / Dormitories</option>
+              <option value="Other">Other Campus Area</option>
+            </select>
+            <!-- Custom input revealed when 'Other' is chosen -->
+            <input 
+              type="text" 
+              id="itemLocationOther" 
+              class="other-input" 
+              placeholder="Please specify location (e.g. Tennis Court)..." 
+              style="display: none;" 
+              maxlength="60" 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="itemDate" class="form-label">Date (Lost/Found) <span class="required">*</span></label>
+            <input type="date" id="itemDate" required />
+          </div>
+        </div>
+
+        <!-- Detailed Description -->
+        <div class="form-group">
+          <label for="itemDescription" class="form-label">Detailed Description <span class="required">*</span></label>
+          <textarea 
+            id="itemDescription" 
+            rows="3" 
+            placeholder="Include unique stickers, scratches, case material, brand, model numbers, or where exactly it was left/spotted..."
+            required
+            maxlength="400"
+          ></textarea>
+          <small class="form-hint">The AI uses these keywords to calculate match scores!</small>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactName" class="form-label">Your Name <span class="required">*</span></label>
+            <input type="text" id="contactName" placeholder="e.g. Sarah Jenkins" required />
+          </div>
+          <div class="form-group">
+            <label for="contactInfo" class="form-label">Contact (Email / Phone) <span class="required">*</span></label>
+            <input type="text" id="contactInfo" placeholder="e.g. s.jenkins@campus.edu" required />
+          </div>
+        </div>
+
+        <!-- Optional Image URL -->
+        <div class="form-group">
+          <label for="itemImage" class="form-label">Image URL <span class="optional">(Optional)</span></label>
+          <input type="url" id="itemImage" placeholder="https://images.unsplash.com/... (optional photo link)" />
+        </div>
+
+        <!-- Form Actions -->
+        <div class="modal-actions">
+          <button type="button" id="cancelReportBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-paper-plane"></i> Submit Report
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: AI MATCH VIEWER                         -->
+  <!-- ============================================== -->
+  <div id="matchModal" class="modal-overlay" aria-hidden="true" role="dialog">
+    <div class="modal-card modal-large">
+      <div class="modal-header">
+        <div class="modal-title-wrapper">
+          <i class="fa-solid fa-wand-magic-sparkles ai-sparkle-icon"></i>
+          <div>
+            <h2>AI Match Suggestions</h2>
+            <p class="modal-subtitle">Heuristic Multi-Factor Compatibility Analysis</p>
+          </div>
+        </div>
+        <button id="closeMatchModalBtn" class="close-modal-btn" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Target Item Summary Banner -->
+        <div id="targetItemSummary" class="target-item-summary">
+          <!-- Injected dynamically -->
+        </div>
+
+        <!-- Matches Header -->
+        <div class="matches-section-header">
+          <h3>
+            <i class="fa-solid fa-chart-pie"></i> Potential Matches Found 
+            <span id="matchCandidateCount" class="badge">0</span>
+          </h3>
+          <p class="match-hint">Matches are computed using category alignment, keyword text similarity, location proximity, color matching, and timeline plausibility.</p>
+        </div>
+
+        <!-- Matches List -->
+        <div id="matchesContainer" class="matches-list">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="closeMatchModalFooterBtn" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
+
