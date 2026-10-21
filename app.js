@@ -15,6 +15,13 @@
 const STORAGE_KEY_ITEMS = 'campusFindItems';
 const STORAGE_KEY_USER = 'campusFindUser';
 
+// Backend API URL: relative if served via Flask on :5000, or absolute if opened from file://
+const API_BASE = window.location.origin.includes(':5000') 
+  ? '/api' 
+  : 'http://127.0.0.1:5000/api';
+
+let isBackendOnline = false;
+
 // Seed demo items so beginners can test the AI matcher immediately
 const INITIAL_DEMO_ITEMS = [
   {
@@ -165,12 +172,33 @@ const STOP_WORDS = new Set([
 // 2. INITIALIZATION
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initUserSession();
   initLocalStorage();
   initEventListeners();
   renderApp();
+  // Synchronize with Python Flask SQLite Backend if online
+  await syncWithBackend();
 });
+
+async function syncWithBackend() {
+  try {
+    const res = await fetch(`${API_BASE}/items`);
+    if (res.ok) {
+      const serverItems = await res.json();
+      if (Array.isArray(serverItems) && serverItems.length > 0) {
+        allItems = serverItems;
+        isBackendOnline = true;
+        saveItemsToStorage();
+        renderApp();
+        showToast('Connected to Python Flask SQLite backend!', 'success');
+      }
+    }
+  } catch (err) {
+    // Backend offline; works smoothly with local storage
+    isBackendOnline = false;
+  }
+}
 
 // Check if user is logged in
 function initUserSession() {
@@ -360,9 +388,21 @@ function initEventListeners() {
   // Reset Demo Data Button (in footer)
   const resetSampleDataBtn = document.getElementById('resetSampleDataBtn');
   if (resetSampleDataBtn) {
-    resetSampleDataBtn.addEventListener('click', () => {
+    resetSampleDataBtn.addEventListener('click', async () => {
       if (confirm('Reset all items back to initial campus demo records? This will overwrite recent local changes.')) {
-        allItems = [...INITIAL_DEMO_ITEMS];
+        if (isBackendOnline) {
+          try {
+            await fetch(`${API_BASE}/reset-demo`, { method: 'POST' });
+            const res = await fetch(`${API_BASE}/items`);
+            if (res.ok) {
+              allItems = await res.json();
+            }
+          } catch (err) {
+            allItems = [...INITIAL_DEMO_ITEMS];
+          }
+        } else {
+          allItems = [...INITIAL_DEMO_ITEMS];
+        }
         saveItemsToStorage();
         renderApp();
         showToast('Sample campus data restored!', 'success');
@@ -425,7 +465,7 @@ function resetAllFilters() {
 // 4. REPORT FORM SUBMISSION
 // ============================================================================
 
-function handleReportSubmit(e) {
+async function handleReportSubmit(e) {
   e.preventDefault();
 
   const form = document.getElementById('reportForm');
@@ -485,9 +525,22 @@ function handleReportSubmit(e) {
     createdAt: new Date().toISOString()
   };
 
-  // Add to beginning of items list
+  // Add to beginning of items list locally
   allItems.unshift(newItem);
   saveItemsToStorage();
+
+  // If backend is online, persist to SQLite database
+  if (isBackendOnline) {
+    try {
+      await fetch(`${API_BASE}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      });
+    } catch (err) {
+      console.warn('Backend item sync failed, saved locally:', err);
+    }
+  }
 
   // Reset form and close modal
   form.reset();
@@ -988,13 +1041,13 @@ window.showFoundReuniteNotice = function() {
   showToast('Notice: Only the person who lost the item can confirm the match and mark both items as Reunited.', 'info');
 };
 
-window.reuniteItemsPair = function(lostItemId, foundItemId) {
+window.reuniteItemsPair = async function(lostItemId, foundItemId) {
   const lostItem = allItems.find(i => i.id === lostItemId);
   const foundItem = allItems.find(i => i.id === foundItemId);
 
   if (!lostItem || !foundItem) return;
 
-  // Link and mark BOTH items as reunited
+  // Link and mark BOTH items as reunited locally
   lostItem.isReunited = true;
   lostItem.matchedWithId = foundItem.id;
   lostItem.reunitedWithTitle = foundItem.title;
@@ -1005,6 +1058,19 @@ window.reuniteItemsPair = function(lostItemId, foundItemId) {
 
   saveItemsToStorage();
 
+  // If backend is online, persist dual-reunite to SQLite
+  if (isBackendOnline) {
+    try {
+      await fetch(`${API_BASE}/items/${lostItemId}/reunite`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchedWithId: foundItemId, action: 'reunite' })
+      });
+    } catch (err) {
+      console.warn('Backend reunite sync failed:', err);
+    }
+  }
+
   // Close match modal
   const matchModal = document.getElementById('matchModal');
   matchModal.classList.remove('active');
@@ -1014,7 +1080,7 @@ window.reuniteItemsPair = function(lostItemId, foundItemId) {
   showToast(`Reunited! Both "${lostItem.title}" and "${foundItem.title}" are now marked as Reunited!`, 'success');
 };
 
-window.unreuniteItemsPair = function(lostItemId, foundItemId) {
+window.unreuniteItemsPair = async function(lostItemId, foundItemId) {
   const lostItem = allItems.find(i => i.id === lostItemId);
   const foundItem = allItems.find(i => i.id === foundItemId);
 
@@ -1031,6 +1097,19 @@ window.unreuniteItemsPair = function(lostItemId, foundItemId) {
 
   saveItemsToStorage();
 
+  // If backend is online, un-reunite in SQLite
+  if (isBackendOnline) {
+    try {
+      await fetch(`${API_BASE}/items/${lostItemId}/reunite`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchedWithId: foundItemId, action: 'unreunite' })
+      });
+    } catch (err) {
+      console.warn('Backend unreunite sync failed:', err);
+    }
+  }
+
   const matchModal = document.getElementById('matchModal');
   matchModal.classList.remove('active');
   matchModal.setAttribute('aria-hidden', 'true');
@@ -1041,12 +1120,12 @@ window.unreuniteItemsPair = function(lostItemId, foundItemId) {
 
 window.toggleReunitedStatus = window.handleLostItemReunite;
 
-window.deleteItem = function(itemId) {
+window.deleteItem = async function(itemId) {
   const item = allItems.find(i => i.id === itemId);
   if (!item) return;
 
   if (confirm(`Are you sure you want to delete the report for "${item.title}"?`)) {
-    // If paired with another item, clear link
+    // If paired with another item, clear link locally
     if (item.matchedWithId) {
       const paired = allItems.find(i => i.id === item.matchedWithId);
       if (paired) {
@@ -1056,6 +1135,16 @@ window.deleteItem = function(itemId) {
     }
     allItems = allItems.filter(i => i.id !== itemId);
     saveItemsToStorage();
+
+    // If backend is online, delete from SQLite
+    if (isBackendOnline) {
+      try {
+        await fetch(`${API_BASE}/items/${itemId}`, { method: 'DELETE' });
+      } catch (err) {
+        console.warn('Backend delete sync failed:', err);
+      }
+    }
+
     renderApp();
     showToast('Report removed successfully.');
   }

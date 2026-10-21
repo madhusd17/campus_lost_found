@@ -173,7 +173,7 @@
       });
 
       // Form submission
-      loginForm.addEventListener('submit', (e) => {
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const college = collegeInput.value.trim();
@@ -199,6 +199,18 @@
         };
 
         localStorage.setItem('campusFindUser', JSON.stringify(userProfile));
+
+        // If Python backend is running, register session in SQLite users table
+        const apiBase = window.location.origin.includes(':5000') ? '/api' : 'http://127.0.0.1:5000/api';
+        try {
+          await fetch(`${apiBase}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, college, password })
+          });
+        } catch (err) {
+          // Offline mode fallback: continues normally
+        }
 
         // Redirect to main page
         window.location.href = 'index.html';

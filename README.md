@@ -43,10 +43,12 @@ Built with **pure HTML5, CSS3, and JavaScript (Vanilla JS)** &mdash; no server s
 
 ```
 campus_lost/
+├── server.py         # Python Flask REST API backend & SQLite database manager
+├── campus_find.db    # SQLite database (auto-generated on startup)
 ├── index.html        # Main dashboard: navbar, search bar, filters, items grid, report & match modals
 ├── login.html        # Student login page with session verification
 ├── styles.css        # Responsive styling, color tokens, cards, modals & animations
-├── app.js            # Core AI matching engine, localStorage persistence, and UI logic
+├── app.js            # Core AI matching engine, backend sync & localStorage fallback
 └── README.md         # Project documentation and guide
 ```
 
@@ -75,12 +77,24 @@ $$\text{Match Score} = \text{Category}(30\%) + \text{Keywords}(30\%) + \text{Loc
 
 ## 🚀 How to Run and Test
 
-### 1. Launching the App
+### Option A: With Python Flask & SQLite Backend (Recommended)
+1. Open PowerShell / Command Prompt in the project folder:
+   ```powershell
+   python server.py
+   ```
+2. Open your browser to:
+   ```
+   http://127.0.0.1:5000
+   ```
+   *Any device on your local Wi-Fi network can also access it using your computer's local IP (e.g. `http://192.168.1.X:5000`)!*
+
+### Option B: Standalone Frontend Mode (No Server Needed)
 1. Open File Explorer to:
    ```
    c:\Users\dell\OneDrive\Documents\campus_lost
    ```
-2. Double-click [`login.html`](login.html) to open it in Google Chrome, Microsoft Edge, or any modern web browser.
+2. Double-click [`login.html`](login.html) to run directly in Google Chrome, Microsoft Edge, or Firefox.
+   *Uses `localStorage` for offline persistence!*
 
 ### 2. Quick Testing Walkthrough
 1. **Log In**: Click **"Autofill Demo Student"**, then click **"Enter Lost & Found Portal"**.
