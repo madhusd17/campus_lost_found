@@ -391,13 +391,16 @@ def serve_static(filename):
 # START SERVER
 # ============================================================================
 
+# Ensure database tables exist whenever app loads
+init_db()
+
 if __name__ == '__main__':
-    init_db()
+    port = int(os.environ.get('PORT', 5000))
     print("=" * 60)
     print("🎓 CampusFind AI - Python Backend Running!")
-    print("📍 Local URL:   http://127.0.0.1:5000")
-    print("📍 Network URL: http://0.0.0.0:5000 (accessible across local Wi-Fi)")
+    print(f"📍 Local URL:   http://127.0.0.1:{port}")
+    print(f"📍 Network URL: http://0.0.0.0:{port} (accessible across local Wi-Fi)")
     print("🗄️ Database:    SQLite (campus_find.db)")
     print("=" * 60)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
 

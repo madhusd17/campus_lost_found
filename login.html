@@ -112,15 +112,6 @@
           <i class="fa-solid fa-arrow-right"></i>
         </button>
       </form>
-
-      <!-- Quick Demo Login Helper for beginners -->
-      <div class="demo-login-box">
-        <p><i class="fa-solid fa-lightbulb"></i> <strong>Quick Demo Mode:</strong></p>
-        <p>You can enter any username, password (4+ chars), and college name, or click below to autofill:</p>
-        <button type="button" id="autofillDemoBtn" class="btn btn-secondary btn-sm">
-          <i class="fa-solid fa-magic-wand-sparkles"></i> Autofill Demo Student
-        </button>
-      </div>
     </div>
 
     <!-- Auth Footer -->
@@ -155,21 +146,12 @@
       const alertMessage = document.getElementById('loginAlertMessage');
       const togglePasswordBtn = document.getElementById('togglePasswordBtn');
       const passwordEyeIcon = document.getElementById('passwordEyeIcon');
-      const autofillBtn = document.getElementById('autofillDemoBtn');
 
       // Toggle password visibility
       togglePasswordBtn.addEventListener('click', () => {
         const isPassword = passwordInput.getAttribute('type') === 'password';
         passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
         passwordEyeIcon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
-      });
-
-      // Autofill demo data
-      autofillBtn.addEventListener('click', () => {
-        collegeInput.value = 'State University';
-        nameInput.value = 'Alex Morgan';
-        passwordInput.value = 'campus2026';
-        alertBox.style.display = 'none';
       });
 
       // Form submission
